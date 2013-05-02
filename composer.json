@@ -1,0 +1,27 @@
+{
+  "name":              "qubes/reporting",
+  "description":       "Cubex Reporting Qube",
+  "version":           "1.0.0",
+  "keywords":          ["cubex", "qubes", "reporting"],
+  "homepage":          "http://cubex.io/qubes/reporting",
+  "license":           "BSD-3-Clause",
+  "authors":           [
+    {
+      "name":     "Brooke Bryan",
+      "email":    "brooke@bajb.net",
+      "homepage": "http://www.bajb.net"
+    }
+  ],
+  "require":           {
+    "php":             ">=5.4.0",
+    "cubex/cubex":     "*",
+    "cubex/figlet":    "*",
+    "cubex/cassandra": "*"
+  },
+  "autoload":          {
+    "psr-0": {
+      "Qubes\\Reporting\\": "src/"
+    }
+  },
+  "minimum-stability": "dev"
+}
