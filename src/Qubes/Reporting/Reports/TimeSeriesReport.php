@@ -6,6 +6,7 @@
 namespace Qubes\Reporting\Reports;
 
 use Cubex\Log\Log;
+use Qubes\Reporting\Helpers\PointCounterHelper;
 use Qubes\Reporting\IReport;
 use Qubes\Reporting\IReportEvent;
 use Qubes\Reporting\Mappers\Inaccuracy;
@@ -34,7 +35,7 @@ abstract class TimeSeriesReport implements IReport
     $this->_counterCF->setColumnFamilyName($this->getColumnFamilyName());
     $this->_pointCounterCF = new ReportPointCounter();
     $this->_pointCounterCF->setColumnFamilyName(
-      $this->getColumnFamilyName() . '_PointCounter'
+      $this->getColumnFamilyName() . PointCounterHelper::CF_SUFFIX
     );
 
     $this->_pointEmpty  = chr(0);
@@ -258,12 +259,15 @@ abstract class TimeSeriesReport implements IReport
     $drillPoints = $this->getDrillPointData();
     if(!empty($drillPoints))
     {
-      $this->_writePointCounters("DRILL", $drillPoints);
+      $this->_writePointCounters(PointCounterHelper::TYPE_DRIL, $drillPoints);
     }
     $filterPoints = $this->getFilterPointData();
     if(!empty($filterPoints))
     {
-      $this->_writePointCounters("FILTER", $filterPoints);
+      $this->_writePointCounters(
+        PointCounterHelper::TYPE_FILTER,
+        $filterPoints
+      );
     }
 
     try
@@ -284,8 +288,14 @@ abstract class TimeSeriesReport implements IReport
 
   protected function _writePointCounters($type, array $values)
   {
-    $dayPrefix   = date("Ymd", $this->_event->eventTime());
-    $monthPrefix = date("Ym", $this->_event->eventTime());
+    $dayPrefix   = date(
+      PointCounterHelper::DATEFORM_DAY,
+      $this->_event->eventTime()
+    );
+    $monthPrefix = date(
+      PointCounterHelper::DATEFORM_MONTH,
+      $this->_event->eventTime()
+    );
 
     $i = 0;
     foreach($values as $value)
