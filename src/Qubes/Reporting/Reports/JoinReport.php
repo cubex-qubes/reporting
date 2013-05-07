@@ -8,8 +8,8 @@ namespace Qubes\Reporting\Reports;
 class JoinReport extends TimeSeriesReport
 {
 
-  public $sales;
   public $joins;
+  public $sales;
 
   public function getColumnFamilyName()
   {
@@ -28,8 +28,8 @@ class JoinReport extends TimeSeriesReport
 
   public function processEvent()
   {
-    $this->setDrillPointData(1, 2, 3);
-    $this->setFilterPointData(4, 5);
+    $this->setDrillPointData(rand(0, 20), rand(0, 10), rand(0, 15));
+    $this->setFilterPointData(rand(0, 1), rand(0, 1));
 
     if($this->_event->getStr("type") === 'sale')
     {
@@ -37,7 +37,7 @@ class JoinReport extends TimeSeriesReport
     }
     else if($this->_event->getStr("type") === 'join')
     {
-      $this->incrementCounters("join", 1);
+      $this->incrementCounters("joins", 1);
     }
   }
 }

@@ -7,21 +7,15 @@ namespace Qubes\Reporting\Reports;
 
 use Cubex\Log\Log;
 use Qubes\Reporting\Helpers\PointCounterHelper;
-use Qubes\Reporting\IReport;
-use Qubes\Reporting\IReportEvent;
 use Qubes\Reporting\Mappers\Inaccuracy;
 use Qubes\Reporting\Mappers\RawEvent;
 use Qubes\Reporting\Reports\Mappers\ReportCounter;
 use Qubes\Reporting\Reports\Mappers\ReportPointCounter;
 
-abstract class TimeSeriesReport implements IReport
+abstract class TimeSeriesReport extends BaseReport
 {
   protected $_counterCF;
   protected $_pointCounterCF;
-  /**
-   * @var IReportEvent
-   */
-  protected $_event;
 
   protected $_drillPointData = [];
   protected $_filterPointData = [];
@@ -40,6 +34,11 @@ abstract class TimeSeriesReport implements IReport
 
     $this->_pointEmpty  = chr(0);
     $this->_pointSpacer = chr(16);
+  }
+
+  public function reportCf()
+  {
+    return $this->_counterCF;
   }
 
   abstract public function getColumnFamilyName();
@@ -68,17 +67,36 @@ abstract class TimeSeriesReport implements IReport
     foreach($this->getIntervals() as $interval)
     {
       list($format, $intervalMins) = $interval;
-      if($intervalMins <= 1)
-      {
-        $keys[] = date($format, $time);
-      }
-      else
-      {
-        $keys[] = "i" . $intervalMins . ":" .
-        date($format, $this->makeIntervalTime($time, $intervalMins));
-      }
+      $keys[] = $this->_makeRowKey($time, $format, $intervalMins);
     }
     return $keys;
+  }
+
+  protected function _makeRowKey($date, $format, $interval)
+  {
+    if($interval <= 1)
+    {
+      $keys = date($format, $date);
+    }
+    else
+    {
+      $keys = "i" . $interval . ":" .
+      date($format, $this->makeIntervalTime($date, $interval));
+    }
+    return $keys;
+  }
+
+  public function getDateRowKeys(
+    $startTime, $endTime, $step = 1440, $format = 'Ymd', $interval = 0
+  )
+  {
+    $rowKeys = [];
+    $keys    = range($startTime, $endTime, $step * 60);
+    foreach($keys as $key)
+    {
+      $rowKeys[] = $this->_makeRowKey($key, $format, $interval);
+    }
+    return $rowKeys;
   }
 
   public function makeIntervalTime($time, $intervalMinutes)
@@ -202,14 +220,6 @@ abstract class TimeSeriesReport implements IReport
     return $keys;
   }
 
-  public function setEvent(IReportEvent $event)
-  {
-    $this->_event = $event;
-    return $this;
-  }
-
-  abstract public function processEvent();
-
   public function incrementCounters($column, $incr)
   {
     $drillKeys  = $this->getDrillPointKeys();
@@ -297,14 +307,74 @@ abstract class TimeSeriesReport implements IReport
       $this->_event->eventTime()
     );
 
-    $i = 0;
+    $i               = 0;
+    $processedValues = [];
     foreach($values as $value)
     {
       $i++;
+      if($type === PointCounterHelper::TYPE_DRIL)
+      {
+        $useValue = implode(
+          $this->_pointSpacer,
+          array_merge($processedValues, [$value])
+        );
+      }
+      else
+      {
+        $useValue = $value;
+      }
+
       $key = $dayPrefix . '-' . $type . '-' . $i;
-      $this->_pointCounterCF->getCf()->increment($key, $value, 1);
+      $this->_pointCounterCF->getCf()->increment($key, $useValue, 1);
       $key = $monthPrefix . '-' . $type . '-' . $i;
-      $this->_pointCounterCF->getCf()->increment($key, $value, 1);
+      $this->_pointCounterCF->getCf()->increment($key, $useValue, 1);
+      $processedValues[] = $value;
     }
+  }
+
+  public function spacer()
+  {
+    return $this->_pointSpacer;
+  }
+
+  public function emptyValue()
+  {
+    return $this->_pointEmpty;
+  }
+
+  public function buildColumnName(
+    $column = null, $drillPointData = null, $filterPointData = null
+  )
+  {
+    $keyArray = [];
+
+    $drillPoints      = $this->getDrillPoints();
+    $drillPointsCount = count($drillPoints);
+    if($drillPointsCount > 0)
+    {
+      for($i = 0; $i < $drillPointsCount; $i++)
+      {
+        $keyArray[] = isset($drillPointData[$i]) ?
+        $drillPointData[$i] : $this->_pointEmpty;
+      }
+    }
+
+    $filterPoints      = $this->getFilterPoints();
+    $filterPointsCount = count($filterPoints);
+    if($filterPointsCount > 0)
+    {
+      for($i = 0; $i < $filterPointsCount; $i++)
+      {
+        $keyArray[] = isset($filterPointData[$i]) ?
+        $filterPointData[$i] : $this->_pointEmpty;
+      }
+    }
+
+    if($column !== null)
+    {
+      $keyArray[] = $column;
+    }
+
+    return implode($this->_pointSpacer, $keyArray);
   }
 }

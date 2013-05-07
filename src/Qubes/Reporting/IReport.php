@@ -10,4 +10,6 @@ interface IReport
   public function processEvent();
 
   public function setEvent(IReportEvent $event);
+
+  public function getReportColumns();
 }
