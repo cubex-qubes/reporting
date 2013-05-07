@@ -5,8 +5,10 @@
 
 namespace Qubes\Reporting\Reports;
 
+use Cubex\Log\Log;
 use Qubes\Reporting\IReport;
 use Qubes\Reporting\IReportEvent;
+use Qubes\Reporting\Mappers\Inaccuracy;
 use Qubes\Reporting\Mappers\RawEvent;
 use Qubes\Reporting\Reports\Mappers\ReportCounter;
 
@@ -221,7 +223,20 @@ abstract class TimeSeriesReport implements IReport
         }
       }
     }
-    $this->_counterCF->getCf()->closeBatch();
+    try
+    {
+      $this->_counterCF->getCf()->closeBatch();
+    }
+    catch(\Exception $e)
+    {
+      //Track data inaccuracy for future rebuilding of data
+      Inaccuracy::cf()->increment(
+        date("YmdHi", $this->_event->eventTime()),
+        $this->getColumnFamilyName(),
+        1
+      );
+      Log::error("Report Update Error: " . $e->getMessage());
+    }
     return $this;
   }
 }
