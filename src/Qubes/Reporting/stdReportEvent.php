@@ -6,6 +6,7 @@
 namespace Qubes\Reporting;
 
 use Cubex\Events\StdEvent;
+use Qubes\Reporting\Helpers\Uuid;
 
 class StdReportEvent extends StdEvent implements IReportEvent
 {
@@ -30,12 +31,25 @@ class StdReportEvent extends StdEvent implements IReportEvent
 
   public function jsonSerialize()
   {
-    return [
-      'name'   => $this->name(),
-      'source' => $this->source(),
-      'time'   => $this->eventTime(),
-      'data'   => $this->_data,
-      'uuid'   => $this->_uuid,
-    ];
+    return $this->_data;
+  }
+
+  public static function rebuildFromQueueData($data)
+  {
+    if(is_scalar($data))
+    {
+      $data = json_decode($data);
+    }
+    return self::rebuildEvent($data->uuid, $data->data);
+  }
+
+  public static function rebuildEvent($uuid, $data)
+  {
+    $name  = Uuid::eventTypeFromUuid($uuid);
+    $time  = Uuid::timeFromUuid($uuid);
+    $event = new StdReportEvent($name, (array)$data);
+    $event->setEventTime($time);
+    $event->setUuid($uuid);
+    return $event;
   }
 }

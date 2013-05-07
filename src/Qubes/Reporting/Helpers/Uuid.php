@@ -15,8 +15,20 @@ class Uuid
     {
       $time = microtime(true);
     }
-    $uuid = strtoupper($eventType) . '-' . $time . '-';
+    $uuid = $eventType . '-' . $time . '-';
     $uuid .= FileSystem::readRandomCharacters(20);
     return $uuid;
+  }
+
+  public static function timeFromUuid($uuid)
+  {
+    list(, $time,) = explode('-', $uuid, 3);
+    return $time;
+  }
+
+  public static function eventTypeFromUuid($uuid)
+  {
+    list($type,) = explode('-', $uuid, 2);
+    return $type;
   }
 }

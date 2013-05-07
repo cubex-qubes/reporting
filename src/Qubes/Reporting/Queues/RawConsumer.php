@@ -6,14 +6,12 @@
 namespace Qubes\Reporting\Queues;
 
 use Cubex\Data\Validator\Validator;
-use Cubex\Foundation\Config\Config;
 use Cubex\Log\Log;
 use Cubex\Queue\IQueue;
 use Cubex\Queue\IQueueConsumer;
-use Cubex\Queue\IQueueProvider;
 use Cubex\Queue\StdQueue;
-use Cubex\ServiceManager\ServiceConfig;
 use Cubex\Text\TextTable;
+use Qubes\Reporting\Helpers\ReportQueueHelper;
 use Qubes\Reporting\Helpers\Uuid;
 use Qubes\Reporting\IReportEvent;
 use Qubes\Reporting\Mappers\RawEvent;
@@ -107,39 +105,16 @@ class RawConsumer implements IQueueConsumer
 
   public function pushEvent(ReportQueue $pushQueue, IReportEvent $event)
   {
-    if(class_exists($pushQueue->queueProvider))
+    try
     {
-      $queue = new $pushQueue->queueProvider();
-      if($queue instanceof IQueueProvider)
-      {
-        $conf = new Config();
-        if($pushQueue->configuration !== null)
-        {
-          $conf->hydrate($pushQueue->configuration);
-        }
-        $configuration = new ServiceConfig();
-        $configuration->fromConfig($conf);
-        $queue->configure($configuration);
-        $queue->push(
-          new StdQueue($conf->getStr("queue_name", "report")),
-          $event
-        );
-      }
-      else
-      {
-        Log::error(
-          "The class " . $pushQueue->queueProvider . " is not a valid " .
-          "IQueueProvider, ReportQueue[" . $pushQueue->id() . "]"
-        );
-      }
-    }
-    else
-    {
-      Log::error(
-        "The class " . $pushQueue->queueProvider . " could not be " .
-        "loaded, but is required by " .
-        "ReportQueue[" . $pushQueue->id() . "]"
+      ReportQueueHelper::buildQueueProvider($pushQueue)->push(
+        new StdQueue($pushQueue->queueName),
+        ['uuid' => $event->getUuid(), 'data' => $event]
       );
+    }
+    catch(\Exception $e)
+    {
+      Log::error($e->getMessage());
     }
   }
 

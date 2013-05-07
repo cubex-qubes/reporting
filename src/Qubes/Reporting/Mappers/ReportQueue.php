@@ -16,6 +16,7 @@ class ReportQueue extends RecordMapper
    * Queue Provider Class
    */
   public $queueProvider;
+  public $queueName;
   public $configuration;
 
   protected function _configure()

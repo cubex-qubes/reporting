@@ -27,7 +27,7 @@ class MockEvent extends CliCommand
    * @valuerequired
    * @required
    */
-  public $message;
+  public $type;
 
   protected $_echoLevel = 'debug';
 
@@ -36,10 +36,10 @@ class MockEvent extends CliCommand
    */
   public function execute()
   {
-    Log::debug("Got Message '" . $this->message . "'");
+    Log::debug("Got Message '" . $this->type . "'");
     Queue::push(
       new StdQueue($this->queue),
-      new StdEvent($this->eventName, ['message' => $this->message], $this)
+      new StdEvent($this->eventName, ['type' => $this->type], $this)
     );
 
     Log::info("Message Pushed");

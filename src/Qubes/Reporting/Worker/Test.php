@@ -61,7 +61,7 @@ class Test extends CliCommand
     $reportQueue->name          = 'Join DB Queue';
     $reportQueue->reportId      = $report->id();
     $reportQueue->queueProvider = $qbexQueues . '\Database\DatabaseQueue';
-    $reportQueue->configuration = ['queue_name' => 'joinqueue'];
+    $reportQueue->queueName     = 'joinqueue';
     $reportQueue->saveChanges();
 
     Log::debug("Creating failover report queue for joins");
@@ -69,7 +69,7 @@ class Test extends CliCommand
     $reportQueue->name          = 'Join DB Failover Queue';
     $reportQueue->reportId      = $report->id();
     $reportQueue->queueProvider = $qbexQueues . '\Database\DatabaseQueue';
-    $reportQueue->configuration = ['queue_name' => 'failover'];
+    $reportQueue->queueName     = 'failover';
     $reportQueue->saveChanges();
 
     Log::info("Added all test data");
