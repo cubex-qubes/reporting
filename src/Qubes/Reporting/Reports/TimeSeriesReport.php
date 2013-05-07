@@ -23,6 +23,14 @@ abstract class TimeSeriesReport extends BaseReport
   protected $_pointSpacer;
   protected $_pointEmpty;
 
+  const INTERVAL_MONTH = "0;Ym";
+  const INTERVAL_DAY   = "0;Ymd";
+  const INTERVAL_HOUR  = "0;YmdH";
+  const INTERVAL_6HOUR = "360;YmdH";
+  const INTERVAL_3HOUR = "180;YmdH";
+  const INTERVAL_15MIN = "15;YmdHi";
+  const INTERVAL_5MIN  = "5;YmdHi";
+
   public function __construct()
   {
     $this->_counterCF = new ReportCounter();
@@ -46,13 +54,13 @@ abstract class TimeSeriesReport extends BaseReport
   public function getIntervals()
   {
     return [
-      ["Ym", 0],
-      ["Ymd", 0],
-      ["YmdH", 0],
-      ["YmdH", 360],
-      ["YmdH", 180],
-      ["YmdHi", 15],
-      ["YmdHi", 5],
+      self::INTERVAL_MONTH,
+      self::INTERVAL_DAY,
+      self::INTERVAL_HOUR,
+      self::INTERVAL_6HOUR,
+      self::INTERVAL_3HOUR,
+      self::INTERVAL_15MIN,
+      self::INTERVAL_5MIN,
     ];
   }
 
@@ -66,7 +74,7 @@ abstract class TimeSeriesReport extends BaseReport
     $keys = [];
     foreach($this->getIntervals() as $interval)
     {
-      list($format, $intervalMins) = $interval;
+      list($intervalMins, $format) = explode(';', $interval, 2);
       $keys[] = $this->_makeRowKey($time, $format, $intervalMins);
     }
     return $keys;
