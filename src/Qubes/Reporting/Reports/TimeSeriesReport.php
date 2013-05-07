@@ -11,10 +11,12 @@ use Qubes\Reporting\IReportEvent;
 use Qubes\Reporting\Mappers\Inaccuracy;
 use Qubes\Reporting\Mappers\RawEvent;
 use Qubes\Reporting\Reports\Mappers\ReportCounter;
+use Qubes\Reporting\Reports\Mappers\ReportPointCounter;
 
 abstract class TimeSeriesReport implements IReport
 {
   protected $_counterCF;
+  protected $_pointCounterCF;
   /**
    * @var IReportEvent
    */
@@ -30,6 +32,10 @@ abstract class TimeSeriesReport implements IReport
   {
     $this->_counterCF = new ReportCounter();
     $this->_counterCF->setColumnFamilyName($this->getColumnFamilyName());
+    $this->_pointCounterCF = new ReportPointCounter();
+    $this->_pointCounterCF->setColumnFamilyName(
+      $this->getColumnFamilyName() . '_PointCounter'
+    );
 
     $this->_pointEmpty  = chr(0);
     $this->_pointSpacer = chr(16);
@@ -208,7 +214,9 @@ abstract class TimeSeriesReport implements IReport
     $drillKeys  = $this->getDrillPointKeys();
     $filterKeys = $this->getFilterPointKeys();
     $keys       = $this->getIntervalKeys();
+
     $this->_counterCF->getCf()->openBatch();
+
     foreach($keys as $rowKey)
     {
       foreach($drillKeys as $drillKey)
@@ -223,6 +231,7 @@ abstract class TimeSeriesReport implements IReport
         }
       }
     }
+
     try
     {
       $this->_counterCF->getCf()->closeBatch();
@@ -237,6 +246,55 @@ abstract class TimeSeriesReport implements IReport
       );
       Log::error("Report Update Error: " . $e->getMessage());
     }
+
+    $this->_incrementPointCounters();
+
     return $this;
+  }
+
+  protected function _incrementPointCounters()
+  {
+    $this->_pointCounterCF->getCf()->openBatch();
+    $drillPoints = $this->getDrillPointData();
+    if(!empty($drillPoints))
+    {
+      $this->_writePointCounters("DRILL", $drillPoints);
+    }
+    $filterPoints = $this->getFilterPointData();
+    if(!empty($filterPoints))
+    {
+      $this->_writePointCounters("FILTER", $filterPoints);
+    }
+
+    try
+    {
+      $this->_pointCounterCF->getCf()->closeBatch();
+    }
+    catch(\Exception $e)
+    {
+      //Track data inaccuracy for future rebuilding of data
+      Inaccuracy::cf()->increment(
+        date("YmdHi", $this->_event->eventTime()),
+        ($this->getColumnFamilyName() . '-datapoints'),
+        1
+      );
+      Log::error("Report Data Points Error: " . $e->getMessage());
+    }
+  }
+
+  protected function _writePointCounters($type, array $values)
+  {
+    $dayPrefix   = date("Ymd", $this->_event->eventTime());
+    $monthPrefix = date("Ym", $this->_event->eventTime());
+
+    $i = 0;
+    foreach($values as $value)
+    {
+      $i++;
+      $key = $dayPrefix . '-' . $type . '-' . $i;
+      $this->_pointCounterCF->getCf()->increment($key, $value, 1);
+      $key = $monthPrefix . '-' . $type . '-' . $i;
+      $this->_pointCounterCF->getCf()->increment($key, $value, 1);
+    }
   }
 }
