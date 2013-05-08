@@ -37,10 +37,13 @@ class MockEvent extends CliCommand
   public function execute()
   {
     Log::debug("Got Message '" . $this->type . "'");
-    Queue::push(
-      new StdQueue($this->queue),
-      new StdEvent($this->eventName, ['type' => $this->type], $this)
-    );
+    for($i = 0; $i < 445; $i++)
+    {
+      Queue::push(
+        new StdQueue($this->queue),
+        new StdEvent($this->eventName, ['type' => $this->type], $this)
+      );
+    }
 
     Log::info("Message Pushed");
   }

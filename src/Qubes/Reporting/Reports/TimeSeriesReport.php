@@ -42,6 +42,9 @@ abstract class TimeSeriesReport extends BaseReport
 
     $this->_pointEmpty  = chr(0);
     $this->_pointSpacer = chr(16);
+
+    /*$this->_pointEmpty  = "NA";
+    $this->_pointSpacer = "|";*/
   }
 
   public function reportCf()
@@ -74,10 +77,15 @@ abstract class TimeSeriesReport extends BaseReport
     $keys = [];
     foreach($this->getIntervals() as $interval)
     {
-      list($intervalMins, $format) = explode(';', $interval, 2);
-      $keys[] = $this->_makeRowKey($time, $format, $intervalMins);
+      $keys[] = $this->generateRowKey($time, $interval);
     }
     return $keys;
+  }
+
+  public function generateRowKey($date, $interval = self::INTERVAL_DAY)
+  {
+    list($intervalMins, $format) = explode(';', $interval, 2);
+    return $this->_makeRowKey($date, $format, $intervalMins);
   }
 
   protected function _makeRowKey($date, $format, $interval)
@@ -89,7 +97,7 @@ abstract class TimeSeriesReport extends BaseReport
     else
     {
       $keys = "i" . $interval . ":" .
-      date($format, $this->makeIntervalTime($date, $interval));
+        date($format, $this->makeIntervalTime($date, $interval));
     }
     return $keys;
   }
@@ -146,8 +154,8 @@ abstract class TimeSeriesReport extends BaseReport
     if(count($drillPoints) !== $argNums)
     {
       throw new \Exception(
-        "You must specify enough drill points to match {" .
-        implode(",", $drillPoints) . "}"
+        ("You must specify enough drill points to match {" .
+          implode(",", $drillPoints) . "}")
       );
     }
     $keys = [];
@@ -199,8 +207,8 @@ abstract class TimeSeriesReport extends BaseReport
     if(count($filterPoints) !== $argNums)
     {
       throw new \Exception(
-        "You must specify enough filter points to match {" .
-        implode(",", $filterPoints) . "}"
+        ("You must specify enough filter points to match {" .
+          implode(",", $filterPoints) . "}")
       );
     }
     $keys = [];
@@ -323,7 +331,7 @@ abstract class TimeSeriesReport extends BaseReport
       if($type === PointCounterHelper::TYPE_DRIL)
       {
         $useValue = implode(
-          $this->_pointSpacer,
+          PointCounterHelper::getPointSplitter(),
           array_merge($processedValues, [$value])
         );
       }
@@ -363,7 +371,7 @@ abstract class TimeSeriesReport extends BaseReport
       for($i = 0; $i < $drillPointsCount; $i++)
       {
         $keyArray[] = isset($drillPointData[$i]) ?
-        $drillPointData[$i] : $this->_pointEmpty;
+          $drillPointData[$i] : $this->_pointEmpty;
       }
     }
 
@@ -374,7 +382,7 @@ abstract class TimeSeriesReport extends BaseReport
       for($i = 0; $i < $filterPointsCount; $i++)
       {
         $keyArray[] = isset($filterPointData[$i]) ?
-        $filterPointData[$i] : $this->_pointEmpty;
+          $filterPointData[$i] : $this->_pointEmpty;
       }
     }
 

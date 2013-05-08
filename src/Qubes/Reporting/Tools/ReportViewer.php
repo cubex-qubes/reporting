@@ -5,6 +5,7 @@
 
 namespace Qubes\Reporting\Tools;
 
+use Cubex\Chronos\Stopwatch;
 use Cubex\Cli\CliCommand;
 use Cubex\Helpers\Strings;
 use Cubex\Text\TextTable;
@@ -36,6 +37,8 @@ class ReportViewer extends CliCommand
 
   public function execute()
   {
+    $stopwatch = new Stopwatch("reporttime");
+    $stopwatch->start();
     $reportClass   = '\Qubes\Reporting\Reports\\' . $this->report;
     $this->_report = new $reportClass();
     if(!($this->_report instanceof IReport))
@@ -50,7 +53,23 @@ class ReportViewer extends CliCommand
       $builder = new TimeSeriesBuilder($this->_report);
       $builder->setDateRange(strtotime('today'), time());
       $builder->setInterval(TimeSeriesReport::INTERVAL_5MIN);
-      echo TextTable::fromArray($builder->toArray());
+      $drillPoints = Strings::stringToRange($this->drills);
+      if($drillPoints)
+      {
+        $builder->setDrillData($drillPoints);
+      }
+      $filterPoints = Strings::stringToRange($this->filters);
+      if($drillPoints)
+      {
+        $builder->setFilterData($filterPoints);
+      }
+      $table = TextTable::fromArray($builder->toArray());
+      $table->appendSpacer();
+      $table->appendRow($builder->getTotalRow());
+      echo $table;
     }
+    $stopwatch->stop();
+    echo "\nReport Generated in: ";
+    echo round($stopwatch->totalTime(), 5) . " seconds \n";
   }
 }

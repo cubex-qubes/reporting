@@ -13,6 +13,7 @@ class TimeSeriesBuilder
   protected $_report;
   protected $_reportColumns = [];
   protected $_columnLookup = [];
+  protected $_totals = [];
   protected $_startTime;
   protected $_endTime;
   protected $_interval;
@@ -51,13 +52,27 @@ class TimeSeriesBuilder
 
   public function setDrillData($point1 /*,$pointX*/)
   {
-    $this->_drillPoints = func_get_args();
+    if(is_array($point1))
+    {
+      $this->_drillPoints = $point1;
+    }
+    else
+    {
+      $this->_drillPoints = func_get_args();
+    }
     return $this;
   }
 
   public function setFilterData($point1 /*,$pointX*/)
   {
-    $this->_filterPoints = func_get_args();
+    if(is_array($point1))
+    {
+      $this->_filterPoints = $point1;
+    }
+    else
+    {
+      $this->_filterPoints = func_get_args();
+    }
     return $this;
   }
 
@@ -98,21 +113,44 @@ class TimeSeriesBuilder
       $return = [];
     }
 
+    $this->_totals[] = 'Total';
+    foreach($return as $result)
+    {
+      $i = 0;
+      foreach($result as $k => $v)
+      {
+        if(++$i > 1)
+        {
+          $this->_totals[$k] += $v;
+        }
+      }
+    }
+
     return $return;
+  }
+
+  public function getTotalRow()
+  {
+    return (array)$this->_totals;
   }
 
   protected function _getDrillReportArray()
   {
-    $return = [];
-    $rows   = PointCounterHelper::getDrillPoints(
+    $return     = [];
+    $drillCount = count($this->_drillPoints);
+    $rows       = PointCounterHelper::getDrillPoints(
       $this->_report->getColumnFamilyName(),
-      (count($this->_drillPoints) + 1),
-      date(PointCounterHelper::DATEFORM_DAY, $this->_startTime)
+      ($drillCount + 1),
+      date(PointCounterHelper::DATEFORM_DAY, $this->_startTime),
+      $this->_drillPoints
     );
 
     $columns = [];
 
-    $rowKey = date("Ymd");
+    $rowKey = $this->_report->generateRowKey(
+      time(),
+      TimeSeriesReport::INTERVAL_DAY
+    );
 
     foreach($rows as $row)
     {
@@ -128,10 +166,14 @@ class TimeSeriesBuilder
         $row = $cf->getSlice($rowKey, $column, $column . '~');
         if($row)
         {
+          $col      = explode(
+            PointCounterHelper::getPointSplitter(),
+            $column
+          )[$drillCount];
           $return[] = $this->_parseRow(
             $row,
-            $column,
-            $this->_report->getDrillPoints()[count($this->_drillPoints)]
+            $col,
+            $this->_report->getDrillPoints()[$drillCount]
           );
         }
       }
@@ -141,23 +183,24 @@ class TimeSeriesBuilder
 
   protected function _parseRow($row, $keyColumn = null, $keyName = null)
   {
-    $reportRow = [];
+    $reportRow = array_fill_keys($this->_reportColumns, 0);
     if($keyColumn !== null)
     {
+      //Push key to the start of the array, maintaining key
+      $reportRow           = array_reverse($reportRow, true);
       $reportRow[$keyName] = $keyColumn;
+      $reportRow           = array_reverse($reportRow, true);
     }
 
-    foreach($this->_reportColumns as $column)
+    foreach($row as $column => $value)
     {
-      if($row && isset($slice[$this->_columnLookup[$column]]))
+      $column = end(explode($this->_report->spacer(), $column));
+      if(isset($reportRow[$column]))
       {
-        $reportRow[$column] = $slice[$this->_columnLookup[$column]];
-      }
-      else
-      {
-        $reportRow[$column] = 0;
+        $reportRow[$column] = $value;
       }
     }
+
     return $reportRow;
   }
 }
