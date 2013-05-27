@@ -16,7 +16,8 @@
     "php":             ">=5.4.0",
     "cubex/cubex":     "*",
     "cubex/figlet":    "*",
-    "cubex/cassandra": "*"
+    "cubex/cassandra": "*",
+    "react/eep":       "*"
   },
   "autoload":          {
     "psr-0": {
