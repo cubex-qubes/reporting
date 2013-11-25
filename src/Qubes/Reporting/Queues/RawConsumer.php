@@ -5,12 +5,10 @@
 
 namespace Qubes\Reporting\Queues;
 
-use Cubex\Data\Validator\Validator;
 use Cubex\Log\Log;
 use Cubex\Queue\IQueue;
 use Cubex\Queue\IQueueConsumer;
 use Cubex\Queue\StdQueue;
-use Cubex\Text\TextTable;
 use Qubes\Reporting\Helpers\ReportQueueHelper;
 use Qubes\Reporting\Helpers\Uuid;
 use Qubes\Reporting\IReportEvent;
@@ -133,5 +131,15 @@ class RawConsumer implements IQueueConsumer
   public function shutdown()
   {
     return true;
+  }
+
+  /**
+   * Time in seconds to treat queue locks as stale, false to never unlock
+   *
+   * @return bool|int
+   */
+  public function lockReleaseTime()
+  {
+    return false;
   }
 }

@@ -58,4 +58,14 @@ class ReportConsumer implements IQueueConsumer
   {
     return true;
   }
+
+  /**
+   * Time in seconds to treat queue locks as stale, false to never unlock
+   *
+   * @return bool|int
+   */
+  public function lockReleaseTime()
+  {
+    return false;
+  }
 }

@@ -7,16 +7,12 @@ namespace Qubes\Reporting\Worker;
 
 use Cubex\Cli\CliCommand;
 use Cubex\Cli\Shell;
-use Cubex\Facade\Queue;
 use Cubex\Figlet\Figlet;
-use Cubex\Foundation\Config\Config;
 use Cubex\Log\Log;
-use Cubex\Queue\IQueueProvider;
 use Cubex\Queue\StdQueue;
 use Qubes\Reporting\Helpers\ReportQueueHelper;
 use Qubes\Reporting\Mappers\Report;
 use Qubes\Reporting\Mappers\ReportQueue;
-use Qubes\Reporting\Queues\RawConsumer;
 use Qubes\Reporting\Queues\ReportConsumer;
 
 /**

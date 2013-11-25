@@ -6,7 +6,6 @@
 namespace Qubes\Reporting\Worker;
 
 use Cubex\Cli\CliCommand;
-use Cubex\Container\Container;
 use Cubex\Events\EventManager;
 use Cubex\Events\IEvent;
 use Cubex\Log\Log;

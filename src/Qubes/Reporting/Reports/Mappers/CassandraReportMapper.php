@@ -5,7 +5,7 @@
 
 namespace Qubes\Reporting\Reports\Mappers;
 
-use Cubex\Mapper\Cassandra\CassandraMapper;
+use Cubex\Cassandra\CassandraMapper;
 
 class CassandraReportMapper extends CassandraMapper
 {

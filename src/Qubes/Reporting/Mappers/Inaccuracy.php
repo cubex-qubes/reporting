@@ -5,7 +5,7 @@
 
 namespace Qubes\Reporting\Mappers;
 
-use Cubex\Mapper\Cassandra\CassandraMapper;
+use Cubex\Cassandra\CassandraMapper;
 
 /**
  * Track event > report exceptions

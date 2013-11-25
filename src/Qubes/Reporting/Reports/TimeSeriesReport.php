@@ -8,7 +8,6 @@ namespace Qubes\Reporting\Reports;
 use Cubex\Log\Log;
 use Qubes\Reporting\Helpers\PointCounterHelper;
 use Qubes\Reporting\Mappers\Inaccuracy;
-use Qubes\Reporting\Mappers\RawEvent;
 use Qubes\Reporting\Reports\Mappers\ReportCounter;
 use Qubes\Reporting\Reports\Mappers\ReportPointCounter;
 
@@ -42,7 +41,6 @@ abstract class TimeSeriesReport extends BaseReport
 
     $this->_pointEmpty  = chr(0);
     $this->_pointSpacer = chr(16);
-
     /*$this->_pointEmpty  = "NA";
     $this->_pointSpacer = "|";*/
   }
@@ -97,7 +95,7 @@ abstract class TimeSeriesReport extends BaseReport
     else
     {
       $keys = "i" . $interval . ":" .
-        date($format, $this->makeIntervalTime($date, $interval));
+      date($format, $this->makeIntervalTime($date, $interval));
     }
     return $keys;
   }
@@ -155,7 +153,7 @@ abstract class TimeSeriesReport extends BaseReport
     {
       throw new \Exception(
         ("You must specify enough drill points to match {" .
-          implode(",", $drillPoints) . "}")
+        implode(",", $drillPoints) . "}")
       );
     }
     $keys = [];
@@ -208,7 +206,7 @@ abstract class TimeSeriesReport extends BaseReport
     {
       throw new \Exception(
         ("You must specify enough filter points to match {" .
-          implode(",", $filterPoints) . "}")
+        implode(",", $filterPoints) . "}")
       );
     }
     $keys = [];
@@ -371,7 +369,7 @@ abstract class TimeSeriesReport extends BaseReport
       for($i = 0; $i < $drillPointsCount; $i++)
       {
         $keyArray[] = isset($drillPointData[$i]) ?
-          $drillPointData[$i] : $this->_pointEmpty;
+        $drillPointData[$i] : $this->_pointEmpty;
       }
     }
 
@@ -382,7 +380,7 @@ abstract class TimeSeriesReport extends BaseReport
       for($i = 0; $i < $filterPointsCount; $i++)
       {
         $keyArray[] = isset($filterPointData[$i]) ?
-          $filterPointData[$i] : $this->_pointEmpty;
+        $filterPointData[$i] : $this->_pointEmpty;
       }
     }
 

@@ -23,7 +23,7 @@ class JoinReport extends TimeSeriesReport
 
   public function getFilterPoints()
   {
-    return ['direct_or_affiliate', 'free_or_trial'];
+    return ['payment_type', 'tracked'];
   }
 
   public function processEvent()
